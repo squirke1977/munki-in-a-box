@@ -26,13 +26,13 @@ WEBROOT="/Library/Server/Web/Data/Sites/Default"
 PHPROOT="/Library/Server/Web/Config/php"
 GIT="/usr/bin/git"
 MANU="/usr/local/munki/manifestutil"
-TEXTEDITOR="TextWrangler.app"
+TEXTEDITOR="/usr/bin/nano"
 osvers=$(sw_vers -productVersion | awk -F. '{print $2}') # Thanks Rich Trouton
-webstatus=$(serveradmin status web | awk '{print $3}') # Thanks Charles Edge
-AUTOPKGRUN="AdobeFlashPlayer.munki AdobeReader.munki Dropbox.munki Firefox.munki GoogleChrome.munki OracleJava7.munki TextWrangler.munki munkitools2.munki MakeCatalogs.munki"
+#webstatus=$(serveradmin status web | awk '{print $3}') # Thanks Charles Edge
+#AUTOPKGRUN="AdobeFlashPlayer.munki AdobeReader.munki Dropbox.munki Firefox.munki GoogleChrome.munki OracleJava7.munki TextWrangler.munki munkitools2.munki MakeCatalogs.munki"
 DEFAULTS="/usr/bin/defaults"
 MAINPREFSDIR="/Library/Preferences"
-ADMINUSERNAME="ladmin"
+ADMINUSERNAME="admin"
 SCRIPTDIR="/usr/local/bin"
 ## Below are for Sean Kaiser's Scripts. Uncomment to Use.
 #AUTOPKGEMAIL="youraddress@domain.com"
@@ -42,9 +42,9 @@ echo "Welcome to Munki-in-a-Box. We're going to get things rolling here with a c
 
 ${LOGGER} "Starting up..."
 
-echo "$webstatus"
+#echo "$webstatus"
 
-${LOGGER} "Webstatus echoed."
+#${LOGGER} "Webstatus echoed."
 
 ####
 
@@ -70,14 +70,14 @@ fi
 
 ${LOGGER} "Mac OS X 10.8 or later is installed."
 
-if
-    [[ $webstatus == *STOPPED* ]]; then
-    ${LOGGER} "Could not run because the Web Service is stopped"
-    echo "Please turn on Web Services in Server.app"
-    exit 3 # Sorry, turn on the webserver.
-fi
+#if
+#    [[ $webstatus == *STOPPED* ]]; then
+#    ${LOGGER} "Could not run because the Web Service is stopped"
+#    echo "Please turn on Web Services in Server.app"
+#    exit 3 # Sorry, turn on the webserver.
+#fi
 
-${LOGGER} "Web service is running."
+#${LOGGER} "Web service is running."
 
 if
     [[ $EUID -ne 0 ]]; then
@@ -87,18 +87,18 @@ fi
 
 ${LOGGER} "Script is running as root."
 
-if
-    [[ ! -d "${WEBROOT}" ]]; then
-    echo "No web root exists at ${WEBROOT}. This might be because you don't have Server.app installed and configured."
-    exit 5 # Web Root folder doesn't exist.
-fi
+#if
+#    [[ ! -d "${WEBROOT}" ]]; then
+#    echo "No web root exists at ${WEBROOT}. This might be because you don't have Server.app installed and configured."
+#    exit 5 # Web Root folder doesn't exist.
+#fi
 
 # If we pass this point, the Repo gets linked:
 
-    ln -s "${REPODIR}" "${WEBROOT}"
+#    ln -s "${REPODIR}" "${WEBROOT}"
 
-    ${LOGGER} "The repo is now linked. ${REPODIR} now appears at ${WEBROOT}"
-
+#    ${LOGGER} "The repo is now linked. ${REPODIR} now appears at ${WEBROOT}"
+#
 if
     [[ ! -f $MUNKILOC/munkiimport ]]; then
     ${LOGGER} "Grabbing and Installing the Munki Tools Because They Aren't Present"
@@ -168,50 +168,50 @@ if
 ###
 
 # Installing the Xcode command line tools on 10.7.x through 10.10.x
- 
+
 osx_vers=$(sw_vers -productVersion | awk -F "." '{print $2}')
 cmd_line_tools_temp_file="/tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress"
- 
+
 # Installing the latest Xcode command line tools on 10.9.x or 10.10.x
- 
+
 	if [[ "$osx_vers" -eq 9 ]] || [[ "$osx_vers" -eq 10 ]]; then
- 
-	# Create the placeholder file which is checked by the softwareupdate tool 
+
+	# Create the placeholder file which is checked by the softwareupdate tool
 	# before allowing the installation of the Xcode command line tools.
-	
+
 	touch "$cmd_line_tools_temp_file"
-	
+
 	# Find the last listed update in the Software Update feed with "Command Line Tools" in the name
-	
+
 	cmd_line_tools=$(softwareupdate -l | awk '/\*\ Command Line Tools/ { $1=$1;print }' | tail -1 | sed 's/^[[ \t]]*//;s/[[ \t]]*$//;s/*//' | cut -c 2-)
-	
+
 	#Install the command line tools
-	
+
 	softwareupdate -i "$cmd_line_tools" -v
-	
+
 	# Remove the temp file
-	
+
 		if [[ -f "$cmd_line_tools_temp_file" ]]; then
 	  rm "$cmd_line_tools_temp_file"
 		fi
 	fi
- 
+
 # Installing the latest Xcode command line tools on 10.7.x and 10.8.x
- 
+
 # on 10.7/10.8, instead of using the software update feed, the command line tools are downloaded
 # instead from public download URLs, which can be found in the dvtdownloadableindex:
 # https://devimages.apple.com.edgekey.net/downloads/xcode/simulators/index-3905972D-B609-49CE-8D06-51ADC78E07BC.dvtdownloadableindex
- 
+
 	if [[ "$osx_vers" -eq 7 ]] || [[ "$osx_vers" -eq 8 ]]; then
- 
+
 		if [[ "$osx_vers" -eq 7 ]]; then
 	    DMGURL=http://devimages.apple.com/downloads/xcode/command_line_tools_for_xcode_os_x_lion_april_2013.dmg
 		fi
-	
+
 		if [[ "$osx_vers" -eq 8 ]]; then
 	     DMGURL=http://devimages.apple.com/downloads/xcode/command_line_tools_for_xcode_os_x_mountain_lion_april_2014.dmg
 		fi
- 
+
 		TOOLS=clitools.dmg
 		curl "$DMGURL" -o "$TOOLS"
 		TMPMOUNT=`/usr/bin/mktemp -d /tmp/clitools.XXXX`
@@ -240,6 +240,8 @@ mkdir "${REPONAME}/catalogs"
 mkdir "${REPONAME}/manifests"
 mkdir "${REPONAME}/pkgs"
 mkdir "${REPONAME}/pkgsinfo"
+mkdir "${REPONAME}/site_default"
+
 
 chmod -R a+rX "${REPONAME}"
 chown -R :wheel "${REPONAME}"
@@ -252,22 +254,22 @@ echo "Repo Created"
 # Create a client installer pkg pointing to this repo. Thanks Nick!
 ####
 
-if
-    [[ ! -f /usr/bin/pkgbuild ]]; then
-    ${LOGGER} "Pkgbuild is not installed."
-    echo "Please install Xcode command line tools first."
-    exit 0 # Gotta install the command line tools.
-fi
+#if
+#    [[ ! -f /usr/bin/pkgbuild ]]; then
+#    ${LOGGER} "Pkgbuild is not installed."
+#    echo "Please install Xcode command line tools first."
+#    exit 0 # Gotta install the command line tools.
+#fi
 
-mkdir -p /tmp/ClientInstaller/Library/Preferences/
+#mkdir -p /tmp/ClientInstaller/Library/Preferences/
 
-HOSTNAME=$(/bin/hostname)
-${DEFAULTS} write /tmp/ClientInstaller/Library/Preferences/ManagedInstalls.plist SoftwareRepoURL "http://$HOSTNAME/${REPONAME}"
+#HOSTNAME=$(/bin/hostname)
+#${DEFAULTS} write /tmp/ClientInstaller/Library/Preferences/ManagedInstalls.plist SoftwareRepoURL "http://$HOSTNAME/${REPONAME}"
 
-/usr/bin/pkgbuild --identifier com.munkiinabox.client.pkg --root /tmp/ClientInstaller ClientInstaller.pkg
+#/usr/bin/pkgbuild --identifier com.munkiinabox.client.pkg --root /tmp/ClientInstaller ClientInstaller.pkg
 
-${LOGGER} "Client install pkg created."
-echo "Client install pkg is created. It's in the base of the repo."
+#${LOGGER} "Client install pkg created."
+#echo "Client install pkg is created. It's in the base of the repo."
 
 ####
 # Get AutoPkg
@@ -290,6 +292,7 @@ echo "AutoPkg Installed"
 ${DEFAULTS} write com.github.autopkg MUNKI_REPO "$REPODIR"
 
 autopkg repo-add http://github.com/autopkg/recipes.git
+# add more REPOs here - pull these from lonmac01
 
 ${DEFAULTS} write com.googlecode.munki.munkiimport editor "${TEXTEDITOR}"
 ${DEFAULTS} write com.googlecode.munki.munkiimport repo_path "${REPODIR}"
@@ -336,19 +339,19 @@ echo "List of Packages for adding to repo:" ${listofpkgs[*]}
 # Thanks Rich! Code for Array Processing borrowed from First Boot Packager
 # Original at https://github.com/rtrouton/rtrouton_scripts/tree/master/rtrouton_scripts/first_boot_package_install/scripts
 
-tLen=${#listofpkgs[@]}
-echo "$tLen" " packages to install"
+#tLen=${#listofpkgs[@]}
+#echo "$tLen" " packages to install"
 
-for (( i=0; i<tLen; i++));
-do
-    ${LOGGER} "Adding ${listofpkgs[$i]} to site_default"
-    ${MANU} add-pkg ${listofpkgs[$i]} --manifest site_default
-    ${LOGGER} "Added ${listofpkgs[$i]} to site_default"
-done
+#for (( i=0; i<tLen; i++));
+#do
+#    ${LOGGER} "Adding ${listofpkgs[$i]} to site_default"
+#    ${MANU} add-pkg ${listofpkgs[$i]} --manifest site_default
+#    ${LOGGER} "Added ${listofpkgs[$i]} to site_default"
+#done
 
 ####
 # Install AutoPkg Automation Scripts by the amazing Sean Kaiser
-# Uncomment this section to install 
+# Uncomment this section to install
 ####
 
 # cd "${REPOLOC}"
@@ -361,7 +364,7 @@ done
 # sed -i.orig3 "s|user=[\"]autopkg[\"]|user=\"${ADMINUSERNAME}\"|" autopkg-wrapper.sh
 # mv autopkg-wrapper.sh ${SCRIPTDIR}
 # mv com.example.autopkg-wrapper.plist "/Library/LaunchDaemons/${AUTOPKGORGNAME}.autopkg-wrapper.plist"
-# 
+#
 # launchctl load "/Library/LaunchDaemons/${AUTOPKGORGNAME}.autopkg-wrapper.plist"
 
 ####
@@ -409,36 +412,36 @@ hdiutil detach "$TMPMOUNT2" -force
 # Install Munki Enroll
 ####
 
-cd "${REPODIR}"
-${GIT} clone https://github.com/edingc/munki-enroll.git
-mv munki-enroll munki-enroll-host
-mv munki-enroll-host/munki-enroll munki-enroll
-mv munki-enroll-host/Scripts/munki_enroll.sh munki-enroll
-sed -i.orig "s|/munki/|/${HOSTNAME}/|" munki-enroll/munki_enroll.sh
+#cd "${REPODIR}"
+#${GIT} clone https://github.com/edingc/munki-enroll.git
+#mv munki-enroll munki-enroll-host
+#mv munki-enroll-host/munki-enroll munki-enroll
+#mv munki-enroll-host/Scripts/munki_enroll.sh munki-enroll
+#sed -i.orig "s|/munki/|/${HOSTNAME}/|" munki-enroll/munki_enroll.sh
 
 ####
 #  Install MunkiReport-PHP
 ####
 
-cd "${WEBROOT}"
-${GIT} clone https://github.com/munkireport/munkireport-php.git
-cp munkireport-php/config_default.php munkireport-php/config.php
-chmod +a "_www allow add_file,delete_child" munkireport-php/app/db
-echo "short_open_tag = On" >> "${PHPROOT}/php.ini"
-echo "\$auth_config['root'] = '\$P\$BSQDsvw8vyCZxzlPaEiXNoP6CIlwzt/';" >> munkireport-php/config.php
+#cd "${WEBROOT}"
+#${GIT} clone https://github.com/munkireport/munkireport-php.git
+#cp munkireport-php/config_default.php munkireport-php/config.php
+#chmod +a "_www allow add_file,delete_child" munkireport-php/app/db
+#echo "short_open_tag = On" >> "${PHPROOT}/php.ini"
+#echo "\$auth_config['root'] = '\$P\$BSQDsvw8vyCZxzlPaEiXNoP6CIlwzt/';" >> munkireport-php/config.php
 
 # This creates a user "root" with password "root"
 # Now to download the pkgsinfo file into the right place and add it to the catalogs and site_default manifest:
 
-echo "Downloading the MunkiReport Info"
+#echo "Downloading the MunkiReport Info"
 
-curl -k -L "https://$HOSTNAME/munkireport-php/index.php?/install/plist" -o "${REPODIR}/pkgsinfo/MunkiReport.plist"
+#curl -k -L "https://$HOSTNAME/munkireport-php/index.php?/install/plist" -o "${REPODIR}/pkgsinfo/MunkiReport.plist"
 
-echo "Downloaded the MunkiReport Info, Now Rebuilding Catalogs"
+#echo "Downloaded the MunkiReport Info, Now Rebuilding Catalogs"
 
-/usr/local/munki/makecatalogs
+#/usr/local/munki/makecatalogs
 
-${MANU} add-pkg munkireport --manifest site_default
+#${MANU} add-pkg munkireport --manifest site_default
 
 ####
 # Clean Up When Done
