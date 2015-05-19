@@ -32,7 +32,8 @@ osvers=$(sw_vers -productVersion | awk -F. '{print $2}') # Thanks Rich Trouton
 #AUTOPKGRUN="AdobeFlashPlayer.munki AdobeReader.munki Dropbox.munki Firefox.munki GoogleChrome.munki OracleJava7.munki TextWrangler.munki munkitools2.munki MakeCatalogs.munki"
 DEFAULTS="/usr/bin/defaults"
 MAINPREFSDIR="/Library/Preferences"
-ADMINUSERNAME="admin"
+#Can we add some logic to detect logged in user? So this can be populated dynamically?
+ADMINUSERNAME=`/bin/ls -l /dev/console | /usr/bin/awk '{ print $3 }'`
 SCRIPTDIR="/usr/local/bin"
 ## Below are for Sean Kaiser's Scripts. Uncomment to Use.
 #AUTOPKGEMAIL="youraddress@domain.com"
@@ -328,13 +329,13 @@ chown -R ${ADMINUSERNAME} ~/Library/AutoPkg
 # Create new site_default manifest and add imported packages to it
 ####
 
-${MANU} new-manifest site_default
-echo "Site_Default created"
-${MANU} add-catalog testing --manifest site_default
-echo "Testing Catalog added to Site_Default"
+#${MANU} new-manifest site_default
+#echo "Site_Default created"
+#${MANU} add-catalog testing --manifest site_default
+#echo "Testing Catalog added to Site_Default"
 
-listofpkgs=($(${MANU} list-catalog-items testing))
-echo "List of Packages for adding to repo:" ${listofpkgs[*]}
+#listofpkgs=($(${MANU} list-catalog-items testing))
+#echo "List of Packages for adding to repo:" ${listofpkgs[*]}
 
 # Thanks Rich! Code for Array Processing borrowed from First Boot Packager
 # Original at https://github.com/rtrouton/rtrouton_scripts/tree/master/rtrouton_scripts/first_boot_package_install/scripts
@@ -397,6 +398,21 @@ com.github.autopkg.munki.makecatalogs" > /Users/$ADMINUSERNAME/Library/Applicati
 
 chown -R $ADMINUSERNAME /Users/$ADMINUSERNAME/Library/Application\ Support/AutoPkgr
 
+#We can add some defaults write commands here to setup email notifications and schedules
+
+#com.lindegroup.AutoPkgr.plist is where we set email and schedule?
+
+defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SMTPFrom "autopkgr_test@thoughtworks.com"
+defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SMTPPort 25
+defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SMTPServer "gmail.thoughtworks.com"
+defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SMTPTo "squirke@thoughtworks.com"
+
+#Repo settings themselves - as well as overrides and other stuff controlled by autopkg are edited at
+#~/Library/Preferences/com.github.autopkg.plist
+#but editing this looks like it's going to be more involved...
+#so don't be an
+
+
 ####
 # Install Munki Admin App by the amazing Hannes Juutilainen
 ####
@@ -442,6 +458,15 @@ hdiutil detach "$TMPMOUNT2" -force
 #/usr/local/munki/makecatalogs
 
 #${MANU} add-pkg munkireport --manifest site_default
+
+####
+# Install AWS tools
+####
+# Wait - there's an AWS tools recipe, we can just run that...?
+
+#curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
+#$ unzip awscli-bundle.zip
+#$ sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
 
 ####
 # Clean Up When Done
