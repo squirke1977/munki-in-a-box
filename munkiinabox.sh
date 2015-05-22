@@ -250,27 +250,8 @@ chown -R :wheel "${REPONAME}"
 ${LOGGER} "Repo Created"
 echo "Repo Created"
 
+#Although it's created with perms that mean my admin user can't write to it... this'll need fixing too
 
-####
-# Create a client installer pkg pointing to this repo. Thanks Nick!
-####
-
-#if
-#    [[ ! -f /usr/bin/pkgbuild ]]; then
-#    ${LOGGER} "Pkgbuild is not installed."
-#    echo "Please install Xcode command line tools first."
-#    exit 0 # Gotta install the command line tools.
-#fi
-
-#mkdir -p /tmp/ClientInstaller/Library/Preferences/
-
-#HOSTNAME=$(/bin/hostname)
-#${DEFAULTS} write /tmp/ClientInstaller/Library/Preferences/ManagedInstalls.plist SoftwareRepoURL "http://$HOSTNAME/${REPONAME}"
-
-#/usr/bin/pkgbuild --identifier com.munkiinabox.client.pkg --root /tmp/ClientInstaller ClientInstaller.pkg
-
-#${LOGGER} "Client install pkg created."
-#echo "Client install pkg is created. It's in the base of the repo."
 
 ####
 # Get AutoPkg
@@ -302,11 +283,9 @@ git clone https://github.com/squirke1977/RecipeOverrides.git /Users/$ADMINUSERNA
 #Now to add the Repos we want...
 
 autopkg repo-add http://github.com/autopkg/recipes.git
-autopkg repo-add http://github.com/autopkg/recipes.git
-autopkg repo-add http://github.com/autopkg/recipes.git
-
-
-# add more REPOs here - pull these from lonmac01
+autopkg repo-add https://github.com/autopkg/cgerke-recipes.git
+autopkg repo-add https://github.com/autopkg/hjuutilainen-recipes.git
+autopkg repo-add https://github.com/squirke1977/autopkg.git
 
 ${DEFAULTS} write com.googlecode.munki.munkiimport editor "${TEXTEDITOR}"
 ${DEFAULTS} write com.googlecode.munki.munkiimport repo_path "${REPODIR}"
@@ -339,49 +318,6 @@ echo "AutoPkg has run"
 chown -R ${ADMINUSERNAME} ~/Library/AutoPkg
 
 ####
-# Create new site_default manifest and add imported packages to it
-####
-
-#${MANU} new-manifest site_default
-#echo "Site_Default created"
-#${MANU} add-catalog testing --manifest site_default
-#echo "Testing Catalog added to Site_Default"
-
-#listofpkgs=($(${MANU} list-catalog-items testing))
-#echo "List of Packages for adding to repo:" ${listofpkgs[*]}
-
-# Thanks Rich! Code for Array Processing borrowed from First Boot Packager
-# Original at https://github.com/rtrouton/rtrouton_scripts/tree/master/rtrouton_scripts/first_boot_package_install/scripts
-
-#tLen=${#listofpkgs[@]}
-#echo "$tLen" " packages to install"
-
-#for (( i=0; i<tLen; i++));
-#do
-#    ${LOGGER} "Adding ${listofpkgs[$i]} to site_default"
-#    ${MANU} add-pkg ${listofpkgs[$i]} --manifest site_default
-#    ${LOGGER} "Added ${listofpkgs[$i]} to site_default"
-#done
-
-####
-# Install AutoPkg Automation Scripts by the amazing Sean Kaiser
-# Uncomment this section to install
-####
-
-# cd "${REPOLOC}"
-# ${GIT} clone https://github.com/seankaiser/automation-scripts.git
-# cd ./automation-scripts/autopkg/
-# sed -i.orig "s|>autopkg|>${ADMINUSERNAME}|" com.example.autopkg-wrapper.plist
-# sed -i.orig2 "s|com.example.autopkg-wrapper|${AUTOPKGORGNAME}.autopkg-wrapper|" com.example.autopkg-wrapper.plist
-# sed -i.orig "s|AdobeFlashPlayer.munki|${AUTOPKGRUN}|" autopkg-wrapper.sh
-# sed -i.orig2 "s|you@yourdomain.net|${AUTOPKGEMAIL}|" autopkg-wrapper.sh
-# sed -i.orig3 "s|user=[\"]autopkg[\"]|user=\"${ADMINUSERNAME}\"|" autopkg-wrapper.sh
-# mv autopkg-wrapper.sh ${SCRIPTDIR}
-# mv com.example.autopkg-wrapper.plist "/Library/LaunchDaemons/${AUTOPKGORGNAME}.autopkg-wrapper.plist"
-#
-# launchctl load "/Library/LaunchDaemons/${AUTOPKGORGNAME}.autopkg-wrapper.plist"
-
-####
 # Install AutoPkgr from the awesome Linde Group!
 ####
 
@@ -410,9 +346,11 @@ chown -R $ADMINUSERNAME /Users/$ADMINUSERNAME/Library/Application\ Support/AutoP
 #We can add some defaults write commands here to setup email notifications and schedules
 
 #com.lindegroup.AutoPkgr.plist is where we set email and schedule?
+#I've not set schedule, and this doesn't seem to be working... Perms??? CFPrefs framework? Looks like Perms. PLus
+#I still need to fix a couple of things, and work out why I can't set email settings...
 
 defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SMTPFrom "autopkgr_test@thoughtworks.com"
-defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SMTPPort 25
+defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SMTPPort "25"
 defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SMTPServer "gmail.thoughtworks.com"
 defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SMTPTo "squirke@thoughtworks.com"
 defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SendEmailNotificationsWhenNewVersionsAreFoundEnabled 1
@@ -430,48 +368,10 @@ cp -R "$TMPMOUNT2/MunkiAdmin.app" /Applications/Utilities
 hdiutil detach "$TMPMOUNT2" -force
 
 ####
-# Install Munki Enroll
-####
-
-#cd "${REPODIR}"
-#${GIT} clone https://github.com/edingc/munki-enroll.git
-#mv munki-enroll munki-enroll-host
-#mv munki-enroll-host/munki-enroll munki-enroll
-#mv munki-enroll-host/Scripts/munki_enroll.sh munki-enroll
-#sed -i.orig "s|/munki/|/${HOSTNAME}/|" munki-enroll/munki_enroll.sh
-
-####
-#  Install MunkiReport-PHP
-####
-
-#cd "${WEBROOT}"
-#${GIT} clone https://github.com/munkireport/munkireport-php.git
-#cp munkireport-php/config_default.php munkireport-php/config.php
-#chmod +a "_www allow add_file,delete_child" munkireport-php/app/db
-#echo "short_open_tag = On" >> "${PHPROOT}/php.ini"
-#echo "\$auth_config['root'] = '\$P\$BSQDsvw8vyCZxzlPaEiXNoP6CIlwzt/';" >> munkireport-php/config.php
-
-# This creates a user "root" with password "root"
-# Now to download the pkgsinfo file into the right place and add it to the catalogs and site_default manifest:
-
-#echo "Downloading the MunkiReport Info"
-
-#curl -k -L "https://$HOSTNAME/munkireport-php/index.php?/install/plist" -o "${REPODIR}/pkgsinfo/MunkiReport.plist"
-
-#echo "Downloaded the MunkiReport Info, Now Rebuilding Catalogs"
-
-#/usr/local/munki/makecatalogs
-
-#${MANU} add-pkg munkireport --manifest site_default
-
-####
 # Install AWS tools
 ####
-# Wait - there's an AWS tools recipe, we can just run that...?
+# Wait - there's an AWS tools recipe, we can just run that...? It's been added as an "install" recipe
 
-#curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
-#$ unzip awscli-bundle.zip
-#$ sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
 
 ####
 # Clean Up When Done
