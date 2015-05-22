@@ -32,7 +32,7 @@ osvers=$(sw_vers -productVersion | awk -F. '{print $2}') # Thanks Rich Trouton
 #AUTOPKGRUN="AdobeFlashPlayer.munki AdobeReader.munki Dropbox.munki Firefox.munki GoogleChrome.munki OracleJava7.munki TextWrangler.munki munkitools2.munki MakeCatalogs.munki"
 DEFAULTS="/usr/bin/defaults"
 MAINPREFSDIR="/Library/Preferences"
-#Can we add some logic to detect logged in user? So this can be populated dynamically?
+#Can we add some logic to detect logged in user? So this can be populated dynamically? Borrowed from Graham G
 ADMINUSERNAME=`/bin/ls -l /dev/console | /usr/bin/awk '{ print $3 }'`
 SCRIPTDIR="/usr/local/bin"
 ## Below are for Sean Kaiser's Scripts. Uncomment to Use.
@@ -291,8 +291,21 @@ echo "AutoPkg Installed"
 
 
 ${DEFAULTS} write com.github.autopkg MUNKI_REPO "$REPODIR"
+${DEFAULTS} write com.github.autopkg CACHE_DIR /Users/$ADMINUSERNAME/Library/AutoPkg/Cache
+${DEFAULTS} write com.github.autopkg RECIPE_OVERRIDE_DIRS /Users/$ADMINUSERNAME/Library/AutoPkg/RecipeOverrides
+
+#now I need to pull *my* overrides from github
+
+git clone https://github.com/squirke1977/RecipeOverrides.git /Users/$ADMINUSERNAME/Library/AutoPkg/RecipeOverrides
+
+
+#Now to add the Repos we want...
 
 autopkg repo-add http://github.com/autopkg/recipes.git
+autopkg repo-add http://github.com/autopkg/recipes.git
+autopkg repo-add http://github.com/autopkg/recipes.git
+
+
 # add more REPOs here - pull these from lonmac01
 
 ${DEFAULTS} write com.googlecode.munki.munkiimport editor "${TEXTEDITOR}"
@@ -385,15 +398,11 @@ echo "AutoPkgr Installed"
 mkdir /Users/$ADMINUSERNAME/Library/Application\ Support/AutoPkgr
 touch /Users/$ADMINUSERNAME/Library/Application\ Support/AutoPkgr/recipe_list.txt
 
-echo "com.github.autopkg.munki.FlashPlayerNoRepackage
-com.github.autopkg.munki.AdobeReader
-com.github.autopkg.munki.dropbox
-com.github.autopkg.munki.firefox-rc-en_US
-com.github.autopkg.munki.google-chrome
-com.github.autopkg.munki.OracleJava8
-com.github.autopkg.munki.OracleJava7
-com.github.autopkg.munki.textwrangler
-com.github.autopkg.munki.munkitools2
+echo "com.github.autopkg.cgerke-recipes.install.AmazonEC2Tools
+local.munki.FuzeMeeting
+com.github.squirke1977.autopkg.munki.googlevoice
+local.munki.GoogleChrome
+com.github.autopkg.munki.FlashPlayerNoRepackage
 com.github.autopkg.munki.makecatalogs" > /Users/$ADMINUSERNAME/Library/Application\ Support/AutoPkgr/recipe_list.txt
 
 chown -R $ADMINUSERNAME /Users/$ADMINUSERNAME/Library/Application\ Support/AutoPkgr
@@ -406,11 +415,7 @@ defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr
 defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SMTPPort 25
 defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SMTPServer "gmail.thoughtworks.com"
 defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SMTPTo "squirke@thoughtworks.com"
-
-#Repo settings themselves - as well as overrides and other stuff controlled by autopkg are edited at
-#~/Library/Preferences/com.github.autopkg.plist
-#but editing this looks like it's going to be more involved...
-#so don't be an
+defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SendEmailNotificationsWhenNewVersionsAreFoundEnabled 1
 
 
 ####
