@@ -246,11 +246,12 @@ mkdir "${REPONAME}/site_default"
 
 chmod -R a+rX "${REPONAME}"
 chown -R :wheel "${REPONAME}"
+chown -R $ADMINUSERNAME "${REPONAME}"
 
 ${LOGGER} "Repo Created"
 echo "Repo Created"
 
-#Although it's created with perms that mean my admin user can't write to it... this'll need fixing too
+#Although it's created with perms that mean my admin user can't write to it... this'll need fixing too. The final Chown command is an attempted fix
 
 
 ####
@@ -283,7 +284,6 @@ git clone https://github.com/squirke1977/RecipeOverrides.git /Users/$ADMINUSERNA
 #Now to add the Repos we want...
 
 autopkg repo-add http://github.com/autopkg/recipes.git
-autopkg repo-add https://github.com/autopkg/cgerke-recipes.git
 autopkg repo-add https://github.com/autopkg/hjuutilainen-recipes.git
 autopkg repo-add https://github.com/squirke1977/autopkg.git
 
@@ -334,8 +334,7 @@ echo "AutoPkgr Installed"
 mkdir /Users/$ADMINUSERNAME/Library/Application\ Support/AutoPkgr
 touch /Users/$ADMINUSERNAME/Library/Application\ Support/AutoPkgr/recipe_list.txt
 
-echo "com.github.autopkg.cgerke-recipes.install.AmazonEC2Tools
-local.munki.FuzeMeeting
+echo "local.munki.FuzeMeeting
 com.github.squirke1977.autopkg.munki.googlevoice
 local.munki.GoogleChrome
 com.github.autopkg.munki.FlashPlayerNoRepackage
@@ -350,11 +349,12 @@ chown -R $ADMINUSERNAME /Users/$ADMINUSERNAME/Library/Application\ Support/AutoP
 #I still need to fix a couple of things, and work out why I can't set email settings...
 
 defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SMTPFrom "autopkgr_test@thoughtworks.com"
-defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SMTPPort "25"
+defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SMTPPort 25
 defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SMTPServer "gmail.thoughtworks.com"
-defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SMTPTo "squirke@thoughtworks.com"
+defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SMTPTo -array "squirke@thoughtworks.com"
 defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SendEmailNotificationsWhenNewVersionsAreFoundEnabled 1
 
+chown $ADMINUSERNAME /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr.plist
 
 ####
 # Install Munki Admin App by the amazing Hannes Juutilainen
@@ -371,6 +371,10 @@ hdiutil detach "$TMPMOUNT2" -force
 # Install AWS tools
 ####
 # Wait - there's an AWS tools recipe, we can just run that...? It's been added as an "install" recipe
+
+curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
+unzip awscli-bundle.zip
+./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
 
 
 ####
