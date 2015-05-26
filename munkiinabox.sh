@@ -88,18 +88,8 @@ fi
 
 ${LOGGER} "Script is running as root."
 
-#if
-#    [[ ! -d "${WEBROOT}" ]]; then
-#    echo "No web root exists at ${WEBROOT}. This might be because you don't have Server.app installed and configured."
-#    exit 5 # Web Root folder doesn't exist.
-#fi
+#install Munki Tools
 
-# If we pass this point, the Repo gets linked:
-
-#    ln -s "${REPODIR}" "${WEBROOT}"
-
-#    ${LOGGER} "The repo is now linked. ${REPODIR} now appears at ${WEBROOT}"
-#
 if
     [[ ! -f $MUNKILOC/munkiimport ]]; then
     ${LOGGER} "Grabbing and Installing the Munki Tools Because They Aren't Present"
@@ -334,7 +324,7 @@ echo "AutoPkgr Installed"
 mkdir /Users/$ADMINUSERNAME/Library/Application\ Support/AutoPkgr
 touch /Users/$ADMINUSERNAME/Library/Application\ Support/AutoPkgr/recipe_list.txt
 
-echo "local.munki.FuzeMeeting
+echo "com.github.squirke1977.autopkg.munki.fuze
 com.github.squirke1977.autopkg.munki.googlevoice
 local.munki.GoogleChrome
 com.github.autopkg.munki.FlashPlayerNoRepackage
@@ -345,9 +335,10 @@ chown -R $ADMINUSERNAME /Users/$ADMINUSERNAME/Library/Application\ Support/AutoP
 #We can add some defaults write commands here to setup email notifications and schedules
 
 #com.lindegroup.AutoPkgr.plist is where we set email and schedule?
-#I've not set schedule, and this doesn't seem to be working... Perms??? CFPrefs framework? Looks like Perms. PLus
+#I've not set schedule, and this doesn't seem to be working... Perms???  Looks like Perms. Plus
 #I still need to fix a couple of things, and work out why I can't set email settings...
 
+defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SUEnableAutomaticChecks 1
 defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SMTPFrom "autopkgr_test@thoughtworks.com"
 defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SMTPPort 25
 defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SMTPServer "gmail.thoughtworks.com"
@@ -372,9 +363,21 @@ hdiutil detach "$TMPMOUNT2" -force
 ####
 # Wait - there's an AWS tools recipe, we can just run that...? It's been added as an "install" recipe
 
-curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
-unzip awscli-bundle.zip
-./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
+if
+    [[ ! -f /usr/local/bin/aws ]]; then
+    ${LOGGER} "Grabbing and Installing the AWS Tools Because They Aren't Present"
+
+    curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
+    unzip awscli-bundle.zip
+    ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
+
+else
+    ${LOGGER} "AWS tools were already installed, I think, so I'm moving on"
+    echo "/usr/local/bin/aws existed, so I am not reinstalling. Hope you really had the AWS tools installed..."
+
+fi
+
+#Add a step to install a package which adds AWS creds here...(that doesn't go into gut)
 
 
 ####
