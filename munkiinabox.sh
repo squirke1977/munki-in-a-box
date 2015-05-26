@@ -43,9 +43,6 @@ echo "Welcome to Munki-in-a-Box. We're going to get things rolling here with a c
 
 ${LOGGER} "Starting up..."
 
-#echo "$webstatus"
-
-#${LOGGER} "Webstatus echoed."
 
 ####
 
@@ -71,14 +68,6 @@ fi
 
 ${LOGGER} "Mac OS X 10.8 or later is installed."
 
-#if
-#    [[ $webstatus == *STOPPED* ]]; then
-#    ${LOGGER} "Could not run because the Web Service is stopped"
-#    echo "Please turn on Web Services in Server.app"
-#    exit 3 # Sorry, turn on the webserver.
-#fi
-
-#${LOGGER} "Web service is running."
 
 if
     [[ $EUID -ne 0 ]]; then
@@ -151,7 +140,7 @@ fi
 # Check for 10.9 and 10.8 created here by Tim Sutton, for which I owe him a beer. Or six.
 
 if
-    [[ ! -d /Applications/Xcode.app ]]; then
+    [[ ! -d /usr/bin/git ]]; then
     echo "You need to install the Xcode command line tools. Let me get that for you, it'll just take a minute."
 
 ###
@@ -335,8 +324,8 @@ chown -R $ADMINUSERNAME /Users/$ADMINUSERNAME/Library/Application\ Support/AutoP
 #We can add some defaults write commands here to setup email notifications and schedules
 
 #com.lindegroup.AutoPkgr.plist is where we set email and schedule?
-#I've not set schedule, and this doesn't seem to be working... Perms???  Looks like Perms. Plus
-#I still need to fix a couple of things, and work out why I can't set email settings...
+#I've not set schedule, and this doesn't seem to be working... Perms???  Looks like Perms.
+#the scheduling is set by a LaunchDaemon...
 
 defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SUEnableAutomaticChecks 1
 defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SMTPFrom "autopkgr_test@thoughtworks.com"
@@ -346,6 +335,36 @@ defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr
 defaults write /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr SendEmailNotificationsWhenNewVersionsAreFoundEnabled 1
 
 chown $ADMINUSERNAME /Users/$ADMINUSERNAME/Library/Preferences/com.lindegroup.AutoPkgr.plist
+
+#setup the scheduling by echoing this stuff into /Library/Lauchdaemons...
+
+/bin/cat > "/Library/LaunchDaemons/com.lindegroup.AutoPkgr.schedule.plist" << 'ALLDONE'
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.lindegroup.AutoPkgr.schedule</string>
+	<key>Program</key>
+	<string>/Applications/Utilities/AutoPkgr.app/Contents/MacOS/AutoPkgr</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/Applications/Utilities/AutoPkgr.app/Contents/MacOS/AutoPkgr</string>
+		<string>-runInBackground</string>
+		<string>YES</string>
+	</array>
+	<key>SessionCreate</key>
+	<true/>
+	<key>StartInterval</key>
+	<integer>14400</integer>
+	<key>UserName</key>
+	<string>test</string>
+</dict>
+</plist>
+ALLDONE
+
+launchctl load /Library/LaunchDaemons/com.lindegroup.AutoPkgr.schedule.plist
 
 ####
 # Install Munki Admin App by the amazing Hannes Juutilainen
@@ -361,7 +380,6 @@ hdiutil detach "$TMPMOUNT2" -force
 ####
 # Install AWS tools
 ####
-# Wait - there's an AWS tools recipe, we can just run that...? It's been added as an "install" recipe
 
 if
     [[ ! -f /usr/local/bin/aws ]]; then
