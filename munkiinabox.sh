@@ -140,7 +140,7 @@ fi
 # Check for 10.9 and 10.8 created here by Tim Sutton, for which I owe him a beer. Or six.
 
 if
-    [[ ! -d /usr/bin/git ]]; then
+    [[ ! -f /usr/bin/git ]]; then
     echo "You need to install the Xcode command line tools. Let me get that for you, it'll just take a minute."
 
 ###
