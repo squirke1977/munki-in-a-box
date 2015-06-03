@@ -220,7 +220,7 @@ mkdir "${REPONAME}/catalogs"
 mkdir "${REPONAME}/manifests"
 mkdir "${REPONAME}/pkgs"
 mkdir "${REPONAME}/pkgsinfo"
-mkdir "${REPONAME}/site_default"
+mkdir "${REPONAME}/client_resources"
 
 
 chmod -R a+rX "${REPONAME}"
@@ -404,7 +404,7 @@ fi
 
 rm "$REPOLOC/autopkg-latest1.pkg"
 rm "$REPOLOC/munkitools2.pkg"
-rm "$REPOLOC/munkiadmin.dmg"
+#rm "$REPOLOC/munkiadmin.dmg"
 rm "$REPOLOC/AutoPkgr.dmg"
 
 ${LOGGER} "I put my toys away."
